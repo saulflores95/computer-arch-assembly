@@ -6,72 +6,102 @@ MODEL small
   LOCALS
 
   .DATA
-    inicio    db  "Convirtiendo string a entero ",0 ;Se imprime al inicio del programa
-    final     db  "Final de conversion",0 ; Se imprime al final del programa
+    inicio    db  "Reloj Super Avanzado y Moderno X 2000 ",0 ;Se imprime al inicio del programa
+    final     db  "Final del programa",0
     dgb       db  "debug -->",0 ;Variable con valor a imprimir debugFunc
     new_line  db  13, 10, 0 ;imprime una linea nueva
-    cadena    db  "1238", 0 ;Se define a cadena
-    tamano    dw  3  ;Se define el tamano de arreglo de cadena
-    base      dw  16 ;Se define la base a convertir
+    space     db  32,0
+    second    db  8, 0
+    second2   db  8, 8, 0
+    minutes   db  13,8, 0
+    puntos    db  ":", 32, 32, 0
   .CODE
 
 Principal     PROC
               mov ax, @DATA
               mov ds, ax
               call clrscr
-              ;Impresion de variable inicio
               mov dx, offset inicio
               call puts
-              ;Linea nueva
-              call newLine
-              ;se ingresa valor de cadena a bx
-              mov bx, offset cadena
-              call strDec2num ;se ejecuta strDec2num y retorna el valor en ax
-
-              mov bx, base  ;se asigna base a bx
-              call printNumBase ;se llama funcion printNumBase
-
               call newLine
 
+              push ds
+              mov ax, 0
+              mov ds, ax
+
+              mov al, 4
+              mov bl, 1ch
+              mul bl
+
+              mov bx, ax
+              mov word ptr[bx], offset clock
+
+              mov cx, cs
+              mov [bx+2], cx
+
+              mov cx, 0
+              pop ds
+              mov dx, 0
+              mov ax, 9
+              mov si, 9
+@@updateCount:cmp ch, 1
+              je @@incSec
+    @@retLoop:jmp @@updateCount
+
+    @@incSec: inc ax
+              mov dx, offset second
+              cmp ax, 9
+              jle @@lesThanNine
+              mov dx, offset second2
+@@lesThanNine:call puts
+              call printNumBase
+              mov cx, 0
+              cmp al, 12
+              jne @@retLoop
+
+    @@incMin: inc si
+              mov ax, si
+              mov dx, offset minutes
+              call puts
+              call printNumBase
+              mov dx, offset puntos
+              call puts
+              mov ax, 0
+              cmp si, 15
+              jne @@retLoop
+
+    @@stop:   call newLine
               mov dx, offset final
               call puts
-
               mov ah, 04ch
               mov al,0
               int 21h
               ret
               ENDP
-            ;--Procedimientos--
 
-strDec2num    PROC
-              mov si, tamano ;tamano de arreglo
-              mov di, 0 ;contador de iteraciones
-              mov cl, 4 ;cantidad de 0 para shift
-              ;primer caracter capturado
-              mov ax, [bx] ;se almacena el valor de bx
-              sub ax, 30h
-              mov ah, 0 ;limpiamos el contenid de ah, esto evita un error en los valors mayores a 1
-              cmp si, 0 ;si el valor de si es igual a 0
-              je @@exit ;saltamos al final
-              ;arreglo caracteres es mayor a uno
-    @@incLoop:inc di ;i++
-              shl ax, cl ;recorremos ax un nibble
-              mov dx, ax ; almacenamos ax en bx
-              mov ax, 0  ;limpanos ax
-              mov al, [bx+di] ;obetenemos siguiente caracter
-              sub al, 30h
-              add ax, dx ; se le suma dx (ax viejito) a ax
-              mov dx, 0 ; se vacia contenido en dx
-              cmp di, si  ;se compara si el contador de iteracion y tamano arreglo de caracteres es igual
-              jne @@incLoop
 
-  @@exit:     ret
+;--Procedimientos--
+clock         PROC
+              inc cl
+              ;call debugFunc
+              cmp cl, 18
+              jne @@outL
+              mov ch, 1
+      @@outL: iret
               ENDP
 
 printNumBase  PROC
+              push ax
+              push bx
+              push cx
+              push dx
+              push si
+
+              mov dx,0
+              mov bx,10
               mov cx, 0
               mov si, 0
-  @@division: div bx  ;se traba aqui
+  @@division: div bx
               push dx
               mov dx, 0
               inc si
@@ -85,14 +115,12 @@ printNumBase  PROC
               dec si
               cmp si, 0
               jne @@print
-              ret
-              ENDP
 
-newLine       PROC
-              push dx
-              mov dx, offset new_line
-              call puts
+              pop si
               pop dx
+              pop cx
+              pop bx
+              pop ax
               ret
               ENDP
 
@@ -105,4 +133,11 @@ debugFunc     PROC
               ret
               ENDP
 
+newLine       PROC
+              push dx
+              mov dx, offset new_line
+              call puts
+              pop dx
+              ret
+              ENDP
 END

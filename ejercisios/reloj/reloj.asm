@@ -13,8 +13,11 @@ MODEL small
     space     db  32,0
     second    db  8, 0
     second2   db  8, 8, 0
-    minutes   db  13,8, 0
-    puntos    db  ":", 32, 32, 0
+    minutes   db  8,8,8,8,8,0
+    minutes2  db  8,8,8,8,8,8,0
+    hour      db  8,8,8,8,8,8,8,8,8,0
+    hour2     db  8,8,8,8,8,8,8,8,8,8,0
+    puntos    db  ":", 32, 0
   .CODE
 
 Principal     PROC
@@ -41,9 +44,29 @@ Principal     PROC
 
               mov cx, 0
               pop ds
+              mov dx, offset space
+              call puts
+
               mov dx, 0
-              mov ax, 9
-              mov si, 9
+              mov si, 0
+              mov di, 0
+
+              mov ax, di
+              call printNumBase
+              call printNumBase
+              mov dx, offset puntos
+              call puts
+
+              mov ax, si
+              call printNumBase
+              call printNumBase
+              mov dx, offset puntos
+              call puts
+
+              mov ax, 0
+              call printNumBase
+              call printNumBase
+
 @@updateCount:cmp ch, 1
               je @@incSec
     @@retLoop:jmp @@updateCount
@@ -56,18 +79,45 @@ Principal     PROC
 @@lesThanNine:call puts
               call printNumBase
               mov cx, 0
-              cmp al, 12
+              cmp al, 59
               jne @@retLoop
 
     @@incMin: inc si
               mov ax, si
               mov dx, offset minutes
-              call puts
+              cmp ax, 9
+              jle @@leThNin2
+              mov dx, offset minutes2
+  @@leThNin2: call puts
               call printNumBase
               mov dx, offset puntos
               call puts
+              mov dx, offset space
+              call puts
+              call puts
               mov ax, 0
-              cmp si, 15
+              cmp si, 59
+              jne @@retLoop
+
+  @@incHour: inc di
+              mov ax, di
+              mov dx, offset hour
+              cmp ax, 9
+              jle @@leThNin3
+              mov dx, offset hour2
+  @@leThNin3: call puts
+              call printNumBase
+              mov dx, offset puntos
+              call puts
+              mov dx, offset space
+              call puts
+              call puts
+              call puts
+              call puts
+              call puts
+              mov ax, 0
+              mov si, 0
+              cmp di, 23
               jne @@retLoop
 
     @@stop:   call newLine
@@ -79,7 +129,6 @@ Principal     PROC
               ret
               ENDP
 
-
 ;--Procedimientos--
 clock         PROC
               inc cl
@@ -89,7 +138,7 @@ clock         PROC
               mov ch, 1
       @@outL: iret
               ENDP
-
+;Impresion de valor de un registro con base deseada
 printNumBase  PROC
               push ax
               push bx
@@ -123,7 +172,7 @@ printNumBase  PROC
               pop ax
               ret
               ENDP
-
+;funcion que imprime un valor de debug
 debugFunc     PROC
               push dx
               mov dx, offset dgb
@@ -132,7 +181,7 @@ debugFunc     PROC
               pop dx
               ret
               ENDP
-
+;funcion que imrpime una nueva linea
 newLine       PROC
               push dx
               mov dx, offset new_line
